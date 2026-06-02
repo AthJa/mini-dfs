@@ -1,0 +1,9 @@
+{
+	"InstallScripts" : 
+	[
+		"/mnt/d/Projects/mini-dfs/build/cmake_install.cmake",
+		"/mnt/d/Projects/mini-dfs/build/client/cmake_install.cmake",
+		"/mnt/d/Projects/mini-dfs/build/storage_node/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

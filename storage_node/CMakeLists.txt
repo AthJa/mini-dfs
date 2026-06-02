@@ -1,0 +1,1 @@
+add_executable(storage_node main.cpp)

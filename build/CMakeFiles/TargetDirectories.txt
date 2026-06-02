@@ -1,0 +1,8 @@
+/mnt/d/Projects/mini-dfs/build/CMakeFiles/edit_cache.dir
+/mnt/d/Projects/mini-dfs/build/CMakeFiles/rebuild_cache.dir
+/mnt/d/Projects/mini-dfs/build/client/CMakeFiles/client_app.dir
+/mnt/d/Projects/mini-dfs/build/client/CMakeFiles/edit_cache.dir
+/mnt/d/Projects/mini-dfs/build/client/CMakeFiles/rebuild_cache.dir
+/mnt/d/Projects/mini-dfs/build/storage_node/CMakeFiles/storage_node.dir
+/mnt/d/Projects/mini-dfs/build/storage_node/CMakeFiles/edit_cache.dir
+/mnt/d/Projects/mini-dfs/build/storage_node/CMakeFiles/rebuild_cache.dir

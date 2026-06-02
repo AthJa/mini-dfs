@@ -1,0 +1,396 @@
+That scope is good. It’s ambitious enough to teach systems concepts, but still controllable if you sequence it correctly.
+
+I would keep your **final target exactly as you wrote**, with one modification:
+
+> Multiple devices should be a deployment target, not a design target.
+
+Meaning:
+
+* Design from day 1 assuming machines are separate
+* Develop initially on one machine with many processes
+* Move to multiple devices near the end
+
+Because if you start debugging sockets + storage + multiple physical machines immediately, debugging becomes miserable.
+
+# Refined project scope
+
+## Required final features
+
+### Clients
+
+* multiple simultaneous clients
+* upload/download/delete/list operations
+* clients communicate only with metadata server initially
+
+### Metadata Server
+
+Responsible for:
+
+* file → node mapping
+* replica tracking
+* node registration
+* node status
+* request routing
+
+Keep **one metadata server only**.
+
+---
+
+### Storage Nodes
+
+Responsible for:
+
+* storing bytes
+* retrieving bytes
+* deleting files
+* reporting health
+
+Keep them intentionally dumb.
+
+---
+
+### Replication
+
+Implement:
+
+```text
+Replication factor = 2
+```
+
+Meaning:
+
+```text
+file.txt
+
+copy 1 -> node1
+copy 2 -> node3
+```
+
+Avoid:
+
+* dynamic replica counts
+* complicated placement logic
+
+---
+
+### Concurrency
+
+Support:
+
+* multiple clients simultaneously
+* threaded servers
+* shared metadata access
+
+This is where mutexes start appearing.
+
+---
+
+### Failure Handling (basic)
+
+Support:
+
+* storage node crash
+* timeout detection
+* read from surviving replica
+
+Do NOT support:
+
+* metadata recovery
+* automatic rebalancing
+* self-healing replicas
+
+---
+
+# What your architecture should roughly become
+
+```text
+          Client A
+              \
+               \
+          Client B -------> Metadata Server
+               /             /      |      \
+              /             /       |       \
+                         Node1    Node2    Node3
+```
+
+Communication paths:
+
+```text
+client <-> metadata server
+
+metadata <-> storage nodes
+
+client <-> storage nodes
+```
+
+Notice:
+
+Clients eventually talk directly to storage nodes.
+
+Metadata server should not become a file relay.
+
+---
+
+# Important design decisions (decide these now)
+
+You need answers before coding.
+
+## 1. TCP or UDP?
+
+Choose:
+
+```text
+TCP
+```
+
+Reason:
+
+You want systems learning.
+
+Not packet loss debugging.
+
+---
+
+## 2. Threading model?
+
+Choose:
+
+```text
+thread-per-connection
+```
+
+NOT:
+
+```text
+epoll
+async frameworks
+reactors
+```
+
+Those add complexity too early.
+
+---
+
+## 3. File granularity?
+
+Choose:
+
+```text
+whole files
+```
+
+NOT:
+
+```text
+chunks
+blocks
+segments
+```
+
+Chunking multiplies complexity.
+
+---
+
+## 4. Metadata storage?
+
+Choose:
+
+```text
+in-memory metadata
+
+optional persistence later
+```
+
+---
+
+## 5. Node discovery?
+
+Choose:
+
+```text
+storage nodes register themselves
+```
+
+Flow:
+
+```text
+node starts
+
+node contacts metadata server
+
+metadata records node
+```
+
+This teaches service discovery naturally.
+
+---
+
+# Recommended milestone order
+
+Do NOT build components in parallel.
+
+Build vertically.
+
+### Milestone 1
+
+```text
+client <-> one storage node
+
+PUT / GET
+```
+
+Learn sockets.
+
+---
+
+### Milestone 2
+
+```text
+persistent file storage
+```
+
+Learn filesystem APIs.
+
+---
+
+### Milestone 3
+
+```text
+metadata server
+```
+
+Learn coordination.
+
+---
+
+### Milestone 4
+
+```text
+multiple storage nodes
+```
+
+Learn distributed thinking.
+
+---
+
+### Milestone 5
+
+```text
+replication
+```
+
+Learn redundancy.
+
+---
+
+### Milestone 6
+
+```text
+multiple clients
+```
+
+Learn concurrency.
+
+---
+
+### Milestone 7
+
+```text
+failure handling
+```
+
+Learn pain.
+
+---
+
+### Milestone 8 (bonus)
+
+```text
+deploy to multiple physical devices
+```
+
+This should mostly work automatically if you used:
+
+```text
+IP + port
+```
+
+instead of:
+
+```text
+localhost
+```
+
+---
+
+# Systems concepts you’ll learn at each stage
+
+Networking:
+
+```text
+sockets
+protocols
+timeouts
+serialization
+```
+
+Storage:
+
+```text
+filesystem APIs
+binary IO
+resource cleanup
+```
+
+Concurrency:
+
+```text
+locks
+race conditions
+thread safety
+```
+
+Distributed systems:
+
+```text
+replication
+failures
+coordination
+```
+
+Debugging:
+
+```text
+logs
+strace
+gdb
+tcpdump (optional)
+```
+
+---
+
+One additional rule I want you to follow for this project:
+
+**Every new feature must come with a failure test.**
+
+Examples:
+
+```text
+Add replication
+
+→ kill node
+→ verify retrieval works
+```
+
+```text
+Add concurrency
+
+→ run 10 clients simultaneously
+→ verify metadata consistency
+```
+
+That habit builds systems thinking faster than adding features.
+
+Your next task is not coding yet.
+
+Write down the **message flow for PUT and GET operations** in plain English. That forces architecture clarity before implementation.
